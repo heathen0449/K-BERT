@@ -98,3 +98,6 @@ ENV/
 # data
 *_results.tsv
 *.out
+
+# K_G Data
+KG_private/
