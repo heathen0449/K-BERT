@@ -1,2 +1,5 @@
 torch>=1.0
 argparse==1.1
+
+numpy~=2.0.0
+pkuseg~=0.0.25

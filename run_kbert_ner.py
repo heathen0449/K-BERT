@@ -6,17 +6,16 @@ import random
 import argparse
 import torch
 import torch.nn as nn
-from torch.nn import CrossEntropyLoss
-from uer.model_builder import build_model
-from uer.utils.config import load_hyperparam
-from uer.utils.optimizers import  BertAdam
-from uer.utils.constants import *
-from uer.utils.vocab import Vocab
-from uer.utils.seed import set_seed
-from uer.model_saver import save_model
+
 import numpy as np
 
 from brain import KnowledgeGraph
+from uer.model_builder import build_model
+from uer.model_saver import save_model
+from uer.utils.config import load_hyperparam
+from uer.utils.optimizers import BertAdam
+from uer.utils.seed import set_seed
+from uer.utils.vocab import Vocab
 
 
 class BertTagger(nn.Module):
@@ -51,11 +50,11 @@ class BertTagger(nn.Module):
         output = output.contiguous().view(-1, self.labels_num)
         output = self.softmax(output)
 
-        label = label.contiguous().view(-1,1)
+        label = label.contiguous().view(-1, 1)
         label_mask = (label > 0).float().to(torch.device(label.device))
-        one_hot = torch.zeros(label_mask.size(0),  self.labels_num). \
-                  to(torch.device(label.device)). \
-                  scatter_(1, label, 1.0)
+        one_hot = torch.zeros(label_mask.size(0), self.labels_num). \
+            to(torch.device(label.device)). \
+            scatter_(1, label, 1.0)
 
         numerator = -torch.sum(output * one_hot, 1)
         label_mask = label_mask.contiguous().view(-1)
@@ -67,7 +66,7 @@ class BertTagger(nn.Module):
         correct = torch.sum(
             label_mask * (predict.eq(label)).float()
         )
-        
+
         return loss, correct, predict, label
 
 
@@ -96,11 +95,11 @@ def main():
     parser.add_argument("--seq_length", default=256, type=int,
                         help="Sequence length.")
     parser.add_argument("--encoder", choices=["bert", "lstm", "gru", \
-                                                   "cnn", "gatedcnn", "attn", \
-                                                   "rcnn", "crnn", "gpt", "bilstm"], \
-                                                   default="bert", help="Encoder type.")
+                                              "cnn", "gatedcnn", "attn", \
+                                              "rcnn", "crnn", "gpt", "bilstm"], \
+                        default="bert", help="Encoder type.")
     parser.add_argument("--bidirectional", action="store_true", help="Specific to recurrent model.")
-    
+
     # Subword options.
     parser.add_argument("--subword_type", choices=["none", "char"], default="none",
                         help="Subword feature type.")
@@ -150,7 +149,7 @@ def main():
                     if l.startswith("B") or l.startswith("S"):
                         begin_ids.append(len(labels_map))
                     labels_map[l] = len(labels_map)
-    
+
     print("Labels: ", labels_map)
     args.labels_num = len(labels_map)
 
@@ -174,13 +173,13 @@ def main():
     # Load or initialize parameters.
     if args.pretrained_model_path is not None:
         # Initialize with pretrained model.
-        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)  
+        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)
     else:
         # Initialize with normal distribution.
         for n, p in list(model.named_parameters()):
             if 'gamma' not in n and 'beta' not in n:
                 p.data.normal_(0, 0.02)
-    
+
     # Build sequence labeling model.
     model = BertTagger(args, model)
 
@@ -196,20 +195,20 @@ def main():
     def batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vm_ids, tag_ids):
         instances_num = input_ids.size()[0]
         for i in range(instances_num // batch_size):
-            input_ids_batch = input_ids[i*batch_size: (i+1)*batch_size, :]
-            label_ids_batch = label_ids[i*batch_size: (i+1)*batch_size, :]
-            mask_ids_batch = mask_ids[i*batch_size: (i+1)*batch_size, :]
-            pos_ids_batch = pos_ids[i*batch_size: (i+1)*batch_size, :]
-            vm_ids_batch = vm_ids[i*batch_size: (i+1)*batch_size, :, :]
-            tag_ids_batch = tag_ids[i*batch_size: (i+1)*batch_size, :]
+            input_ids_batch = input_ids[i * batch_size: (i + 1) * batch_size, :]
+            label_ids_batch = label_ids[i * batch_size: (i + 1) * batch_size, :]
+            mask_ids_batch = mask_ids[i * batch_size: (i + 1) * batch_size, :]
+            pos_ids_batch = pos_ids[i * batch_size: (i + 1) * batch_size, :]
+            vm_ids_batch = vm_ids[i * batch_size: (i + 1) * batch_size, :, :]
+            tag_ids_batch = tag_ids[i * batch_size: (i + 1) * batch_size, :]
             yield input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch
         if instances_num > instances_num // batch_size * batch_size:
-            input_ids_batch = input_ids[instances_num//batch_size*batch_size:, :]
-            label_ids_batch = label_ids[instances_num//batch_size*batch_size:, :]
-            mask_ids_batch = mask_ids[instances_num//batch_size*batch_size:, :]
-            pos_ids_batch = pos_ids[instances_num//batch_size*batch_size:, :]
-            vm_ids_batch = vm_ids[instances_num//batch_size*batch_size:, :, :]
-            tag_ids_batch = tag_ids[instances_num//batch_size*batch_size:, :]
+            input_ids_batch = input_ids[instances_num // batch_size * batch_size:, :]
+            label_ids_batch = label_ids[instances_num // batch_size * batch_size:, :]
+            mask_ids_batch = mask_ids[instances_num // batch_size * batch_size:, :]
+            pos_ids_batch = pos_ids[instances_num // batch_size * batch_size:, :]
+            vm_ids_batch = vm_ids[instances_num // batch_size * batch_size:, :, :]
+            tag_ids_batch = tag_ids[instances_num // batch_size * batch_size:, :]
             yield input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch
 
     # Read dataset.
@@ -244,7 +243,7 @@ def main():
                         new_labels.append(labels_map[PAD_TOKEN])
 
                 dataset.append([tokens, new_labels, mask, pos, vm, tag])
-        
+
         return dataset
 
     # Evaluation function.
@@ -267,7 +266,7 @@ def main():
         if is_test:
             print("Batch size: ", batch_size)
             print("The number of test instances:", instances_num)
- 
+
         correct = 0
         gold_entities_num = 0
         pred_entities_num = 0
@@ -276,7 +275,9 @@ def main():
 
         model.eval()
 
-        for i, (input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vm_ids, tag_ids)):
+        for i, (
+        input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch) in enumerate(
+                batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vm_ids, tag_ids)):
 
             input_ids_batch = input_ids_batch.to(device)
             label_ids_batch = label_ids_batch.to(device)
@@ -286,11 +287,11 @@ def main():
             vm_ids_batch = vm_ids_batch.long().to(device)
 
             loss, _, pred, gold = model(input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch)
-            
+
             for j in range(gold.size()[0]):
                 if gold[j].item() in begin_ids:
                     gold_entities_num += 1
- 
+
             for j in range(pred.size()[0]):
                 if pred[j].item() in begin_ids and gold[j].item() != labels_map["[PAD]"]:
                     pred_entities_num += 1
@@ -302,27 +303,30 @@ def main():
             for j in range(gold.size()[0]):
                 if gold[j].item() in begin_ids:
                     start = j
-                    for k in range(j+1, gold.size()[0]):
-                        
+                    for k in range(j + 1, gold.size()[0]):
+
                         if gold[k].item() == labels_map['[ENT]']:
                             continue
 
-                        if gold[k].item() == labels_map["[PAD]"] or gold[k].item() == labels_map["O"] or gold[k].item() in begin_ids:
+                        if gold[k].item() == labels_map["[PAD]"] or gold[k].item() == labels_map["O"] or gold[
+                            k].item() in begin_ids:
                             end = k - 1
                             break
                     else:
                         end = gold.size()[0] - 1
                     gold_entities_pos.append((start, end))
-            
+
             for j in range(pred.size()[0]):
-                if pred[j].item() in begin_ids and gold[j].item() != labels_map["[PAD]"] and gold[j].item() != labels_map["[ENT]"]:
+                if pred[j].item() in begin_ids and gold[j].item() != labels_map["[PAD]"] and gold[j].item() != \
+                        labels_map["[ENT]"]:
                     start = j
-                    for k in range(j+1, pred.size()[0]):
+                    for k in range(j + 1, pred.size()[0]):
 
                         if gold[k].item() == labels_map['[ENT]']:
                             continue
 
-                        if pred[k].item() == labels_map["[PAD]"] or pred[k].item() == labels_map["O"] or pred[k].item() in begin_ids:
+                        if pred[k].item() == labels_map["[PAD]"] or pred[k].item() == labels_map["O"] or pred[
+                            k].item() in begin_ids:
                             end = k - 1
                             break
                     else:
@@ -332,14 +336,14 @@ def main():
             for entity in pred_entities_pos:
                 if entity not in gold_entities_pos:
                     continue
-                else: 
+                else:
                     correct += 1
 
         print("Report precision, recall, and f1:")
-        p = correct/pred_entities_num
-        r = correct/gold_entities_num
-        f1 = 2*p*r/(p+r)
-        print("{:.3f}, {:.3f}, {:.3f}".format(p,r,f1))
+        p = correct / pred_entities_num
+        r = correct / gold_entities_num
+        f1 = 2 * p * r / (p + r)
+        print("{:.3f}, {:.3f}, {:.3f}".format(p, r, f1))
 
         return f1
 
@@ -364,8 +368,8 @@ def main():
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'gamma', 'beta']
     optimizer_grouped_parameters = [
-                {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay_rate': 0.01},
-                {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay_rate': 0.0}
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay_rate': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay_rate': 0.0}
     ]
     optimizer = BertAdam(optimizer_grouped_parameters, lr=args.learning_rate, warmup=args.warmup, t_total=train_steps)
 
@@ -373,9 +377,11 @@ def main():
     f1 = 0.0
     best_f1 = 0.0
 
-    for epoch in range(1, args.epochs_num+1):
+    for epoch in range(1, args.epochs_num + 1):
         model.train()
-        for i, (input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch) in enumerate(batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vm_ids, tag_ids)):
+        for i, (
+        input_ids_batch, label_ids_batch, mask_ids_batch, pos_ids_batch, vm_ids_batch, tag_ids_batch) in enumerate(
+                batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vm_ids, tag_ids)):
             model.zero_grad()
 
             input_ids_batch = input_ids_batch.to(device)
@@ -390,7 +396,8 @@ def main():
                 loss = torch.mean(loss)
             total_loss += loss.item()
             if (i + 1) % args.report_steps == 0:
-                print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i+1, total_loss / args.report_steps))
+                print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i + 1,
+                                                                                  total_loss / args.report_steps))
                 total_loss = 0.
 
             loss.backward()

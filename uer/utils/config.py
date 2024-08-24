@@ -2,6 +2,7 @@
 import json
 import codecs
 
+
 def load_hyperparam(args):
     with codecs.open(args.config_path, "r", "utf-8") as f:
         param = json.load(f)
@@ -13,5 +14,5 @@ def load_hyperparam(args):
     args.heads_num = param.get("heads_num", None)
     args.layers_num = param.get("layers_num", 12)
     args.dropout = param.get("dropout", 0.1)
-    
+
     return args

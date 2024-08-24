@@ -7,7 +7,7 @@ import unicodedata
 
 
 class Tokenizer(object):
-    
+
     def __init__(self, args):
         pass
 
@@ -16,7 +16,7 @@ class Tokenizer(object):
 
 
 class CharTokenizer(Tokenizer):
-    
+
     def __init__(self, args):
         super().__init__(args)
 
@@ -25,7 +25,7 @@ class CharTokenizer(Tokenizer):
 
 
 class SpaceTokenizer(Tokenizer):
-   
+
     def __init__(self, args):
         super().__init__(args)
 
@@ -69,19 +69,19 @@ class BertTokenizer(object):
             [(ids, tok) for ids, tok in enumerate(self.vocab.i2w)])
         self.do_basic_tokenize = do_basic_tokenize
         if do_basic_tokenize:
-          self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case,
-                                                never_split=never_split)
+            self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case,
+                                                  never_split=never_split)
         self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
         self.max_len = max_len if max_len is not None else int(1e12)
 
     def tokenize(self, text):
         if self.do_basic_tokenize:
-          split_tokens = []
-          for token in self.basic_tokenizer.tokenize(text):
-              for sub_token in self.wordpiece_tokenizer.tokenize(token):
-                  split_tokens.append(sub_token)
+            split_tokens = []
+            for token in self.basic_tokenizer.tokenize(text):
+                for sub_token in self.wordpiece_tokenizer.tokenize(token):
+                    split_tokens.append(sub_token)
         else:
-          split_tokens = self.wordpiece_tokenizer.tokenize(text)
+            split_tokens = self.wordpiece_tokenizer.tokenize(text)
         return split_tokens
 
     def convert_tokens_to_ids(self, tokens):
@@ -308,12 +308,10 @@ def _is_punctuation(char):
     # Characters such as "^", "$", and "`" are not in the Unicode
     # Punctuation class but we treat them as punctuation anyways, for
     # consistency.
-    if ((cp >= 33 and cp <= 47) or (cp >= 58 and cp <= 64) or
-            (cp >= 91 and cp <= 96) or (cp >= 123 and cp <= 126)):
+    if ((33 <= cp <= 47) or (58 <= cp <= 64) or
+            (91 <= cp <= 96) or (123 <= cp <= 126)):
         return True
     cat = unicodedata.category(char)
     if cat.startswith("P"):
         return True
     return False
-
-

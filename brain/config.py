@@ -2,12 +2,17 @@ import os
 
 
 FILE_DIR_PATH = os.path.dirname(os.path.abspath(__file__))
-
+OLD_FILE_DIR_PATH = os.path.dirname(FILE_DIR_PATH)
 KGS = {
     'HowNet': os.path.join(FILE_DIR_PATH, 'kgs/HowNet.spo'),
     'CnDbpedia': os.path.join(FILE_DIR_PATH, 'kgs/CnDbpedia.spo'),
     'Medical': os.path.join(FILE_DIR_PATH, 'kgs/Medical.spo'),
+    'Industry': os.path.join(OLD_FILE_DIR_PATH,'KG_private/output/所属行业.spo'),
+    'ChildComp': os.path.join(OLD_FILE_DIR_PATH, 'KG_private/output/子公司.spo'),
+    'Concept': os.path.join(OLD_FILE_DIR_PATH, 'KG_private/output/所属概念.spo'),
+    'CoreBus': os.path.join(OLD_FILE_DIR_PATH, 'KG_private/output/主营业务.spo')
 }
+
 
 MAX_ENTITIES = 2
 
