@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+*.py.pclprof
+*.zip
+Sundry/
+.zed/
+new_for_label/
+
 # Distribution / packaging
 .Python
 env/
@@ -101,3 +107,6 @@ ENV/
 
 # K_G Data
 KG_private/
+
+model test/
+output test/

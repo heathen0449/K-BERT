@@ -17,10 +17,9 @@ class KnowledgeGraph(object):
     def __init__(self, spo_files, predicate=False):
         self.predicate = predicate
         self.spo_file_paths = [config.KGS.get(f, f) for f in spo_files]
-        print(self.spo_file_paths)
         self.lookup_table = self._create_lookup_table()
         self.segment_vocab = list(self.lookup_table.keys()) + config.NEVER_SPLIT_TAG
-        self.tokenizer = pkuseg.pkuseg(model_name="default", postag=False, user_dict=self.segment_vocab)
+        self.tokenizer = pkuseg.pkuseg(model_name="default", postag=False, user_dict= self.segment_vocab)
         self.special_tags = set(config.NEVER_SPLIT_TAG)
 
     # 创建查找表--根据给定的spo文件
@@ -31,20 +30,26 @@ class KnowledgeGraph(object):
             with open(spo_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     try:
-                        # 拿到三元组
-                        subj, pred, obje = line.strip().split("\t")
+                        # 拿到三元组 # 已经变为四元组
+                        # subject, relation, target, target_class =
+
+                        words = line.strip().split("\t")
+                        if len(words) == 3:
+                            subject, relation, target = words
+                        elif len(words) == 4:
+                            subject, relation, target, target_class = words
                     except:
                         print("[KnowledgeGraph] Bad spo:", line)
                     # 如果有谓语
                     if self.predicate:
-                        value = pred + obje
+                        value = relation + target
                     else:
-                        value = obje
+                        value = target
                     # 如果主语在查找表中
-                    if subj in lookup_table.keys():
-                        lookup_table[subj].add(value)
+                    if subject in lookup_table.keys():
+                        lookup_table[subject].add(value)
                     else:
-                        lookup_table[subj] = {value}
+                        lookup_table[subject] = {value}
         return lookup_table
 
     # max entities: 限制实体的数量么？

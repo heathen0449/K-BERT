@@ -14,6 +14,7 @@ KGS = {
 }
 
 
+
 MAX_ENTITIES = 2
 
 # Special token words.
